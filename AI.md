@@ -9,7 +9,7 @@ The usage was focused on producing base structure of the classes mentioned below
 **Files:** `basic.py`
 
 ChatGPT provided:
-- The base skeleton for functions:  
+- The base empty functions:  
   - `assign_requests_greedily`  
   - `route_cost`  
   - `build_plan` 
@@ -59,4 +59,3 @@ AI tools were sometimes used to:
 - give function names to make the code more readable.
 - improvements during debugging
 - Structurize .md files
-

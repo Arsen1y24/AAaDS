@@ -16,11 +16,16 @@ class SimulationResult:
 
 
 class TrafficSimulator:
-    # model with noise of Gaussian 10%
+    """
+    Simulate running a completed plan with some noise on the edges
+    (to imitate traffic jams or traffic lights).
+    Simple model for now: Gaussian noise of 10% of the travel time on each edge.
+    """
+
     def __init__(self, rng: random.Random | None = None) -> None:
         self.rng = rng or random.Random()
 
-    def edge_time(self, edge: Edge) -> float:
+    def _edge_time(self, edge: Edge) -> float:
         base = edge.base_travel_time
         sigma = 0.1 * base
         noise = self.rng.gauss(0.0, sigma) if sigma > 0 else 0.0
@@ -50,7 +55,7 @@ class TrafficSimulator:
                     src = path[i]
                     dst = path[i + 1]
                     edge = next(e for e in graph.neighbors(src) if e.dst == dst)
-                    t += self.edge_time(edge)
+                    t += self._edge_time(edge)
                 cur = req.node
 
             if return_to_depot and math.isfinite(t) and route.stops:
@@ -62,7 +67,7 @@ class TrafficSimulator:
                         src = path[i]
                         dst = path[i + 1]
                         edge = next(e for e in graph.neighbors(src) if e.dst == dst)
-                        t += self.edge_time(edge)
+                        t += self._edge_time(edge)
 
             vehicle_times[vid] = t
 

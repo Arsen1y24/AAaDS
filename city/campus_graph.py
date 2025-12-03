@@ -29,22 +29,23 @@ def build_campus_graph() -> "CityGraph":
 
         # Central north–south axis
         "C_GATE_S": (4.0, 1.5),
-        "C_MID":    (4.0, 4.0),
         "C_PARK":   (4.0, 6.5),
 
         # Inner ring
         "R_SW": (2.0, 2.0),
         "R_SE": (6.0, 2.0),
+        "R_SWE_MID": (4.0, 2.0),
         "R_NE": (6.0, 6.0),
         "R_NW": (2.0, 6.0),
+        "R_NWE_MID": (4.0, 6.0),
 
         # Internal campus points
-        "C_MAIN":   (4.0, 3.8),
-        "C_GREEN":  (3.6, 4.6),
+        "C_MAIN":   (4.0, 4.0),
         "KRUPP_S":  (5.5, 3.5),
         "KRUPP_N":  (5.5, 4.7),
         "PARK_N":   (4.0, 7.5),
     }
+    
 
     for nid, (x, y) in coords.items():
         g.add_node(nid, x, y)
@@ -83,7 +84,6 @@ def build_campus_graph() -> "CityGraph":
     road("ST_E", "E_N", V_MAIN)
 
     road("ST_M", "C_PARK", V_LOCAL)
-    road("C_PARK", "C_MID", V_LOCAL)
 
     # Inner ring
     road("R_SW", "R_SE", V_LOCAL)
@@ -102,15 +102,19 @@ def build_campus_graph() -> "CityGraph":
     road("E_N", "R_NE", V_LOCAL)
 
     # Central spine
-    road("C_GATE_S", "C_MID", V_LOCAL)
-    road("C_MID", "C_PARK", V_LOCAL)
+    road("C_GATE_S", "C_MAIN", V_LOCAL)
+    road("C_MAIN", "C_PARK", V_LOCAL)
 
     # Internal campus links
     road("R_SW", "C_MAIN", V_LOCAL)
     road("R_SE", "C_MAIN", V_LOCAL)
-    road("C_MAIN", "C_GREEN", V_LOCAL)
-    road("R_NW", "C_GREEN", V_LOCAL)
-    road("R_NE", "C_GREEN", V_LOCAL)
+    road("R_NW", "C_MAIN", V_LOCAL)
+    road("R_NE", "C_MAIN", V_LOCAL)
+    road("R_SW", "R_SWE_MID", V_LOCAL)
+    road("R_SE", "R_SWE_MID", V_LOCAL)
+    road("R_NW", "R_NWE_MID", V_LOCAL)
+    road("R_NE", "R_NWE_MID", V_LOCAL)
+    
 
     # Krupp College
     road("R_SE", "KRUPP_S", V_LOCAL)

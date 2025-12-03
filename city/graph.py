@@ -28,6 +28,7 @@ class CityGraph:
     def __init__(self) -> None:
         self.nodes: Dict[NodeId, Node] = {}
         self.adj: Dict[NodeId, List[Edge]] = {}
+        self._cached_max_speed = None
 
     def add_node(self, node_id: NodeId, x: float, y: float) -> None:
         if node_id in self.nodes:
@@ -58,11 +59,13 @@ class CityGraph:
         return self.adj.get(node_id, [])
 
     def max_speed_limit(self) -> float:
-        max_speed = 1.0
-        for edges in self.adj.values():
-            for e in edges:
-                max_speed = max(max_speed, e.speed_limit)
-        return max_speed
+        if self._cached_max_speed is None:
+            max_speed = 1.0
+            for edges in self.adj.values():
+                for e in edges:
+                    max_speed = max(max_speed, e.speed_limit)
+            self._cached_max_speed = max_speed
+        return self._cached_max_speed
 
     def heuristic_time(self, a: NodeId, b: NodeId) -> float:
         # Heuristics for A*: Euclid / max_speed.

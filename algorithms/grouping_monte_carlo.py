@@ -46,12 +46,7 @@ def route_time(
     dist: Dict[Tuple[NodeId, NodeId], float],
     vehicle_capacity: int,
 ) -> float:
-    """
-    Compute route time given capacity:
-    - start from the depot,
-    - in one trip you can carry at most vehicle_capacity demand,
-    - if there is not enough space for the next request -> return to depot and start a new trip.
-    """
+    #updated to have capacity feature handling
     if not stops:
         return 0.0
     if vehicle_capacity <= 0:
@@ -198,12 +193,7 @@ class GroupingResult:
 
 
 class MonteCarloGroupingPlanner:
-    """
-    Monte Carlo planner that optimizes only the grouping of requests
-    (i.e., which vehicle serves which set of requests).
-    Inside each group, the visit order is built using a nearest-neighbor heuristic.
-    """
-
+    # optimized requests by groups using montecarlo
     def __init__(self, rng: random.Random, iterations: int = 2000) -> None:
         self.rng = rng
         self.iterations = iterations

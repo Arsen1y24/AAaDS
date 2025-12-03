@@ -14,17 +14,11 @@ class PlanCost:
     total_time: float
 
 
-class MonteCarloVRPPlanner:
-    """
-    Simple Monte Carlo version:
-    - randomly assign customers to vehicles (respecting capacity)
-    - compute deterministic total time and keep the best plan.
-    """
-
+class MonteCarloVRP:
     def __init__(self, rng: Optional[random.Random] = None) -> None:
         self.rng = rng or random.Random()
 
-    def _random_feasible_plan(
+    def random_plan(
             self,
             depot: NodeId,
             vehicles: List[Vehicle],
@@ -37,14 +31,14 @@ class MonteCarloVRPPlanner:
             v.id: VehicleRoute(vehicle_id=v.id) for v in vehicles
         }
 
-        # Simply assign requests randomly to vehicles
+        # randomly assign requests to vehicles
         for req in shuffled:
             v = self.rng.choice(vehicles)
             routes[v.id].stops.append(req)
 
         return Plan(depot=depot, routes=routes)
 
-    def _deterministic_cost(
+    def det_cost (
             self,
             graph: CityGraph,
             vehicles: List[Vehicle],
@@ -87,7 +81,7 @@ class MonteCarloVRPPlanner:
                 cur = req.node
                 cap_left -= demand
 
-            # Finally, return to depot if required
+            # return to depot if required
             if return_to_depot and cur != plan.depot:
                 path, travel = astar_shortest_path(graph, cur, plan.depot)
                 if path is None:
@@ -110,10 +104,10 @@ class MonteCarloVRPPlanner:
 
         for _ in range(iterations):
             try:
-                plan = self._random_feasible_plan(depot, vehicles, requests)
+                plan = self.random_plan(depot, vehicles, requests)
             except RuntimeError:
                 continue
-            cost = self._deterministic_cost(graph, vehicles, plan)
+            cost = self.det_cost(graph, vehicles, plan)
             if best is None or cost.total_time < best.total_time:
                 best = cost
 

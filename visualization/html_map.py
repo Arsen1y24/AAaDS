@@ -34,7 +34,7 @@ def _compute_screen_coords(
     return coords
 
 # Builds the full list of nodes for animation, taking capacity into account:
-# if capacity is insufficient → the vehicle returns to depot and starts a new trip.
+# if capacity is insufficient, the vehicle returns to depot and starts a new trip.
 def _build_full_route_nodes(
     graph: CityGraph,
     plan: Plan,

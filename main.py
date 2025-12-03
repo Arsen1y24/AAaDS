@@ -96,20 +96,20 @@ def generate_random_requests(
 
 
 def main() -> None:
-    rng = random.Random(42)
+    rng = random.Random()
 
     graph = build_campus_graph()
     depot = "C_GATE_S"
 
     vehicles = [
-        Vehicle(id="V1", capacity=3, start_node=depot),
-        Vehicle(id="V2", capacity=5, start_node=depot),
-        Vehicle(id="V3", capacity=4, start_node=depot),
+        Vehicle(id="V1", capacity=1, start_node=depot),
+        Vehicle(id="V2", capacity=1, start_node=depot),
+        Vehicle(id="V3", capacity=1, start_node=depot),
     ]
 
     # генерим случайные, но уникальные по нодам запросы
     requests: list[DeliveryRequest] = generate_random_requests(
-        graph, depot, rng, n_requests=20
+        graph, depot, rng, n_requests=10
     )
 
     validate_inputs(vehicles, requests)
@@ -119,7 +119,7 @@ def main() -> None:
         print(f"  {r.id} -> node {r.node}")
     print()
 
-    # --- 1) Greedy ---
+    # greedy
     greedy_planner = GreedyVRPPlanner()
     greedy_result = greedy_planner.build_plan(graph, depot, vehicles, requests)
     greedy_plan = greedy_result.plan
@@ -128,7 +128,7 @@ def main() -> None:
         print("[Greedy]", vid, "->", [r.id for r in route.stops])
     print()
 
-    # --- 2) Monte Carlo Grouping ---
+    # monte carlo grouping
     mc_planner = MonteCarloGroupingPlanner(rng, iterations=2000)
     mc_result = mc_planner.build_plan(graph, depot, vehicles, requests)
     mc_plan = mc_result.plan
@@ -137,7 +137,7 @@ def main() -> None:
         print("[MonteCarlo]", vid, "->", [r.id for r in route.stops])
     print()
 
-    # --- 3) Stochastic simulation ---
+    # stoh sim
     sim = TrafficSimulator(rng)
 
     sim_res_greedy = sim.simulate_once(graph, greedy_plan, vehicles)
@@ -150,15 +150,13 @@ def main() -> None:
     print("[MonteCarlo] stochastic max_time:", sim_res_mc.max_time)
     print()
 
-    # --- 4) Make HTML ---
+    # html transfer
     plans_by_algo = {
         "Greedy VRP": greedy_plan,
         "Monte Carlo Grouping": mc_plan,
     }
 
     export_plan_to_html(graph, plans_by_algo, vehicles, "output/campus_routes.html")
-    print("\nOpen output/campus_routes.html in your browser to see the map.")
-
 
 if __name__ == "__main__":
     main()

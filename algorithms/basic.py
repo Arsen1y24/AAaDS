@@ -13,14 +13,7 @@ class PlanCost:
 
 
 class GreedyVRPPlanner:
-    """
-    Simple baseline planner:
-    – "capacity" is treated as the max load per ONE trip.
-    – If there are more requests than capacity allows, the vehicle performs multiple trips:
-      depot -> deliveries -> depot -> more deliveries -> depot.
-    – Build_plan does not limit the total number of requests assigned to a vehicle,
-      it only ensures that each request fits (demand <= capacity).
-    """
+
 
     def _route_cost(
         self,
@@ -30,11 +23,6 @@ class GreedyVRPPlanner:
         depot: NodeId,
         return_to_depot: bool = True,
     ) -> float:
-        """
-        Computes the cost (time) of a route for the FULL list of stops,
-        taking vehicle capacity into account: the vehicle may make
-        multiple trips back to the depot.
-        """
         cur = vehicle.start_node
         t = 0.0
         cap = vehicle.capacity
@@ -83,7 +71,7 @@ class GreedyVRPPlanner:
         requests: List[DeliveryRequest],
     ) -> PlanCost:
 
-        # Safety: each request must fit into at least one vehicle
+        # each request must fit into at least one vehicle
         for req in requests:
             demand = getattr(req, "demand", 1)
             if all(v.capacity < demand for v in vehicles):

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>City routes</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      background: #020617;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #card {
+      background: #020617;
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+      padding: 16px 20px 24px;
+      border: 1px solid #1f2937;
+      min-width: 960px;
+    }
+    #title {
+      margin: 0 0 4px 0;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    #subtitle {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    #controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      justify-content: space-between;
+    }
+    #algo-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #algo-select {
+      background: #020617;
+      color: #e5e7eb;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      padding: 4px 8px;
+      font-size: 13px;
+    }
+    #timer {
+      font-size: 13px;
+      color: #e5e7eb;
+      font-variant-numeric: tabular-nums;
+    }
+    #legend {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-swatch {
+      width: 14px;
+      height: 3px;
+      border-radius: 999px;
+    }
+    canvas {
+      border-radius: 12px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      cursor: grab;
+    }
+    canvas:active {
+      cursor: grabbing;
+    }
+  </style>
+</head>
+<body>
+<div id="card">
+  <h1 id="title">Constructor University — Delivery Routes</h1>
+  <p id="subtitle">Choose algorithm, drag to pan, scroll to zoom</p>
+  <div id="controls">
+    <div id="algo-box">
+      <span>Algorithm:</span>
+      <select id="algo-select"></select>
+    </div>
+    <div id="timer">t = 0.0 s</div>
+  </div>
+  <div id="legend"></div>
+  <canvas id="map" width="900" height="700"></canvas>
+</div>
+
+<script>
+  const DATA = {"nodes": [{"id": "FH_W", "x": 40.0, "y": 660.0}, {"id": "FH_M", "x": 450.0, "y": 660.0}, {"id": "FH_E", "x": 860.0, "y": 660.0}, {"id": "W_S", "x": 40.0, "y": 543.75}, {"id": "W_M", "x": 40.0, "y": 388.75}, {"id": "W_N", "x": 40.0, "y": 78.75}, {"id": "E_S", "x": 860.0, "y": 543.75}, {"id": "E_M", "x": 860.0, "y": 388.75}, {"id": "E_N", "x": 860.0, "y": 78.75}, {"id": "ST_W", "x": 142.5, "y": 40.0}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "ST_E", "x": 757.5, "y": 40.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "R_SW", "x": 245.0, "y": 505.0}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "R_NE", "x": 655.0, "y": 195.0}, {"id": "R_NW", "x": 245.0, "y": 195.0}, {"id": "C_MAIN", "x": 450.0, "y": 365.5}, {"id": "C_GREEN", "x": 409.0, "y": 303.5}, {"id": "KRUPP_S", "x": 603.75, "y": 388.75}, {"id": "KRUPP_N", "x": 603.75, "y": 295.75}, {"id": "PARK_N", "x": 450.0, "y": 78.75}], "edges": [{"src": "FH_W", "dst": "FH_M", "base_time": 28.776978417266186}, {"src": "FH_W", "dst": "W_S", "base_time": 10.79136690647482}, {"src": "FH_M", "dst": "FH_W", "base_time": 28.776978417266186}, {"src": "FH_M", "dst": "FH_E", "base_time": 28.776978417266186}, {"src": "FH_M", "dst": "C_GATE_S", "base_time": 18.072289156626503}, {"src": "FH_E", "dst": "FH_M", "base_time": 28.776978417266186}, {"src": "FH_E", "dst": "E_S", "base_time": 10.79136690647482}, {"src": "W_S", "dst": "FH_W", "base_time": 10.79136690647482}, {"src": "W_S", "dst": "W_M", "base_time": 14.388489208633093}, {"src": "W_S", "dst": "R_SW", "base_time": 24.83798569649193}, {"src": "W_M", "dst": "W_S", "base_time": 14.388489208633093}, {"src": "W_M", "dst": "W_N", "base_time": 28.776978417266186}, {"src": "W_N", "dst": "W_M", "base_time": 28.776978417266186}, {"src": "W_N", "dst": "ST_W", "base_time": 8.043409991006438}, {"src": "W_N", "dst": "R_NW", "base_time": 30.12048192771084}, {"src": "E_S", "dst": "FH_E", "base_time": 10.79136690647482}, {"src": "E_S", "dst": "E_M", "base_time": 14.388489208633093}, {"src": "E_S", "dst": "R_SE", "base_time": 24.83798569649193}, {"src": "E_M", "dst": "E_S", "base_time": 14.388489208633093}, {"src": "E_M", "dst": "E_N", "base_time": 28.776978417266186}, {"src": "E_N", "dst": "E_M", "base_time": 28.776978417266186}, {"src": "E_N", "dst": "ST_E", "base_time": 8.043409991006438}, {"src": "E_N", "dst": "R_NE", "base_time": 30.12048192771084}, {"src": "ST_W", "dst": "W_N", "base_time": 8.043409991006438}, {"src": "ST_W", "dst": "ST_M", "base_time": 21.58273381294964}, {"src": "ST_M", "dst": "ST_W", "base_time": 21.58273381294964}, {"src": "ST_M", "dst": "ST_E", "base_time": 21.58273381294964}, {"src": "ST_M", "dst": "C_PARK", "base_time": 18.072289156626503}, {"src": "ST_M", "dst": "PARK_N", "base_time": 6.024096385542168}, {"src": "ST_E", "dst": "ST_M", "base_time": 21.58273381294964}, {"src": "ST_E", "dst": "E_N", "base_time": 8.043409991006438}, {"src": "C_GATE_S", "dst": "FH_M", "base_time": 18.072289156626503}, {"src": "C_GATE_S", "dst": "R_SW", "base_time": 24.83798569649193}, {"src": "C_GATE_S", "dst": "R_SE", "base_time": 24.83798569649193}, {"src": "C_GATE_S", "dst": "C_MID", "base_time": 30.12048192771084}, {"src": "C_MID", "dst": "C_PARK", "base_time": 30.12048192771084}, {"src": "C_MID", "dst": "C_GATE_S", "base_time": 30.12048192771084}, {"src": "C_MID", "dst": "C_PARK", "base_time": 30.12048192771084}, {"src": "C_PARK", "dst": "ST_M", "base_time": 18.072289156626503}, {"src": "C_PARK", "dst": "C_MID", "base_time": 30.12048192771084}, {"src": "C_PARK", "dst": "C_MID", "base_time": 30.12048192771084}, {"src": "C_PARK", "dst": "PARK_N", "base_time": 12.048192771084336}, {"src": "R_SW", "dst": "R_SE", "base_time": 48.192771084337345}, {"src": "R_SW", "dst": "R_NW", "base_time": 48.192771084337345}, {"src": "R_SW", "dst": "C_GATE_S", "base_time": 24.83798569649193}, {"src": "R_SW", "dst": "W_S", "base_time": 24.83798569649193}, {"src": "R_SW", "dst": "C_MAIN", "base_time": 32.41837119776797}, {"src": "R_SE", "dst": "R_SW", "base_time": 48.192771084337345}, {"src": "R_SE", "dst": "R_NE", "base_time": 48.192771084337345}, {"src": "R_SE", "dst": "C_GATE_S", "base_time": 24.83798569649193}, {"src": "R_SE", "dst": "E_S", "base_time": 24.83798569649193}, {"src": "R_SE", "dst": "C_MAIN", "base_time": 32.41837119776797}, {"src": "R_SE", "dst": "KRUPP_S", "base_time": 19.04986542270108}, {"src": "R_NE", "dst": "R_SE", "base_time": 48.192771084337345}, {"src": "R_NE", "dst": "R_NW", "base_time": 48.192771084337345}, {"src": "R_NE", "dst": "E_N", "base_time": 30.12048192771084}, {"src": "R_NE", "dst": "C_GREEN", "base_time": 33.47576864927664}, {"src": "R_NE", "dst": "KRUPP_N", "base_time": 16.78119069540255}, {"src": "R_NW", "dst": "R_NE", "base_time": 48.192771084337345}, {"src": "R_NW", "dst": "R_SW", "base_time": 48.192771084337345}, {"src": "R_NW", "dst": "W_N", "base_time": 30.12048192771084}, {"src": "R_NW", "dst": "C_GREEN", "base_time": 25.61480918731241}, {"src": "C_MAIN", "dst": "R_SW", "base_time": 32.41837119776797}, {"src": "C_MAIN", "dst": "R_SE", "base_time": 32.41837119776797}, {"src": "C_MAIN", "dst": "C_GREEN", "base_time": 10.776231216866453}, {"src": "C_GREEN", "dst": "C_MAIN", "base_time": 10.776231216866453}, {"src": "C_GREEN", "dst": "R_NW", "base_time": 25.61480918731241}, {"src": "C_GREEN", "dst": "R_NE", "base_time": 33.47576864927664}, {"src": "KRUPP_S", "dst": "R_SE", "base_time": 19.04986542270108}, {"src": "KRUPP_S", "dst": "KRUPP_N", "base_time": 14.457831325301205}, {"src": "KRUPP_N", "dst": "KRUPP_S", "base_time": 14.457831325301205}, {"src": "KRUPP_N", "dst": "R_NE", "base_time": 16.78119069540255}, {"src": "PARK_N", "dst": "C_PARK", "base_time": 12.048192771084336}, {"src": "PARK_N", "dst": "ST_M", "base_time": 6.024096385542168}], "depot": "C_GATE_S", "algorithms": [{"id": "Greedy VRP", "label": "Greedy VRP", "routes": [{"vehicle_id": "V1", "nodes": [{"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "KRUPP_S", "x": 603.75, "y": 388.75}, {"id": "KRUPP_N", "x": 603.75, "y": 295.75}, {"id": "KRUPP_S", "x": 603.75, "y": 388.75}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "PARK_N", "x": 450.0, "y": 78.75}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "PARK_N", "x": 450.0, "y": 78.75}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "ST_W", "x": 142.5, "y": 40.0}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}]}, {"vehicle_id": "V2", "nodes": [{"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "FH_M", "x": 450.0, "y": 660.0}, {"id": "FH_E", "x": 860.0, "y": 660.0}, {"id": "FH_M", "x": 450.0, "y": 660.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "R_SW", "x": 245.0, "y": 505.0}, {"id": "W_S", "x": 40.0, "y": 543.75}, {"id": "W_M", "x": 40.0, "y": 388.75}, {"id": "W_S", "x": 40.0, "y": 543.75}, {"id": "R_SW", "x": 245.0, "y": 505.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "R_SW", "x": 245.0, "y": 505.0}, {"id": "W_S", "x": 40.0, "y": 543.75}, {"id": "W_M", "x": 40.0, "y": 388.75}, {"id": "W_N", "x": 40.0, "y": 78.75}, {"id": "W_M", "x": 40.0, "y": 388.75}, {"id": "W_S", "x": 40.0, "y": 543.75}, {"id": "R_SW", "x": 245.0, "y": 505.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}]}, {"vehicle_id": "V3", "nodes": [{"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "C_MAIN", "x": 450.0, "y": 365.5}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "R_NE", "x": 655.0, "y": 195.0}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "PARK_N", "x": 450.0, "y": 78.75}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "ST_E", "x": 757.5, "y": 40.0}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}]}], "delivery_nodes": ["ST_E", "C_MID", "W_M", "KRUPP_N", "ST_M", "ST_W", "FH_E", "C_MAIN", "R_NE", "W_N"], "deliveries": [{"vehicle_id": "V1", "node_id": "C_MID", "arrival_time": 30.12048192771084}, {"vehicle_id": "V1", "node_id": "KRUPP_N", "arrival_time": 118.5866462999159}, {"vehicle_id": "V1", "node_id": "ST_M", "arrival_time": 255.2455817564583}, {"vehicle_id": "V1", "node_id": "ST_W", "arrival_time": 433.45482159350433}, {"vehicle_id": "V2", "node_id": "FH_E", "arrival_time": 46.84926757389269}, {"vehicle_id": "V2", "node_id": "W_M", "arrival_time": 157.76299574940234}, {"vehicle_id": "V2", "node_id": "W_N", "arrival_time": 314.66889536990243}, {"vehicle_id": "V3", "node_id": "C_MAIN", "arrival_time": 57.256356894259895}, {"vehicle_id": "V3", "node_id": "R_NE", "arrival_time": 187.54347056934907}, {"vehicle_id": "V3", "node_id": "ST_E", "arrival_time": 360.47021417517624}]}, {"id": "Monte Carlo Grouping", "label": "Monte Carlo Grouping", "routes": [{"vehicle_id": "V1", "nodes": [{"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "C_MAIN", "x": 450.0, "y": 365.5}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "PARK_N", "x": 450.0, "y": 78.75}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "ST_W", "x": 142.5, "y": 40.0}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "PARK_N", "x": 450.0, "y": 78.75}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}]}, {"vehicle_id": "V2", "nodes": [{"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "PARK_N", "x": 450.0, "y": 78.75}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "ST_E", "x": 757.5, "y": 40.0}, {"id": "ST_M", "x": 450.0, "y": 40.0}, {"id": "C_PARK", "x": 450.0, "y": 156.25}, {"id": "C_MID", "x": 450.0, "y": 350.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "KRUPP_S", "x": 603.75, "y": 388.75}, {"id": "KRUPP_N", "x": 603.75, "y": 295.75}, {"id": "KRUPP_S", "x": 603.75, "y": 388.75}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "FH_M", "x": 450.0, "y": 660.0}, {"id": "FH_E", "x": 860.0, "y": 660.0}, {"id": "FH_M", "x": 450.0, "y": 660.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}]}, {"vehicle_id": "V3", "nodes": [{"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "R_SW", "x": 245.0, "y": 505.0}, {"id": "W_S", "x": 40.0, "y": 543.75}, {"id": "W_M", "x": 40.0, "y": 388.75}, {"id": "W_S", "x": 40.0, "y": 543.75}, {"id": "R_SW", "x": 245.0, "y": 505.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "R_SW", "x": 245.0, "y": 505.0}, {"id": "W_S", "x": 40.0, "y": 543.75}, {"id": "W_M", "x": 40.0, "y": 388.75}, {"id": "W_N", "x": 40.0, "y": 78.75}, {"id": "W_M", "x": 40.0, "y": 388.75}, {"id": "W_S", "x": 40.0, "y": 543.75}, {"id": "R_SW", "x": 245.0, "y": 505.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "R_NE", "x": 655.0, "y": 195.0}, {"id": "R_SE", "x": 655.0, "y": 505.0}, {"id": "C_GATE_S", "x": 450.0, "y": 543.75}]}], "delivery_nodes": ["ST_E", "C_MID", "W_M", "KRUPP_N", "ST_M", "ST_W", "FH_E", "C_MAIN", "R_NE", "W_N"], "deliveries": [{"vehicle_id": "V1", "node_id": "C_MAIN", "arrival_time": 57.256356894259895}, {"vehicle_id": "V1", "node_id": "ST_M", "arrival_time": 192.82596680056798}, {"vehicle_id": "V1", "node_id": "ST_W", "arrival_time": 214.40870061351762}, {"vehicle_id": "V2", "node_id": "C_MID", "arrival_time": 30.12048192771084}, {"vehicle_id": "V2", "node_id": "ST_E", "arrival_time": 160.13695068041952}, {"vehicle_id": "V2", "node_id": "KRUPP_N", "arrival_time": 318.3786199499116}, {"vehicle_id": "V2", "node_id": "FH_E", "arrival_time": 423.5735699682985}, {"vehicle_id": "V3", "node_id": "W_M", "arrival_time": 64.06446060161696}, {"vehicle_id": "V3", "node_id": "W_N", "arrival_time": 220.97036022211705}, {"vehicle_id": "V3", "node_id": "R_NE", "arrival_time": 386.8425560218295}]}]};
+
+  const colors = [
+    "#f97316", "#22c55e", "#3b82f6", "#e11d48",
+    "#a855f7", "#14b8a6", "#facc15"
+  ];
+
+  const canvas = document.getElementById("map");
+  const ctx = canvas.getContext("2d");
+  const legendEl = document.getElementById("legend");
+  const algoSelect = document.getElementById("algo-select");
+  const timerEl = document.getElementById("timer");
+
+  // base_time map for edge src->dst
+  const EDGE_TIME = new Map();
+  for (const e of DATA.edges) {
+    EDGE_TIME.set(e.src + "->" + e.dst, e.base_time ?? 1.0);
+  }
+
+  let offsetX = 0;
+  let offsetY = 0;
+  let scale = 1.0;
+
+  let isDragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+
+  let currentAlgoIndex = 0;
+  let ROUTES = [];
+  let DELIVERY_NODES = new Set();
+  let deliveries = [];
+  let visitedDeliveryNodes = new Set();
+  let deliveryColorByNode = new Map();
+  let lastAnimTime = null;
+  let simTime = 0.0;
+  const SPEED = 10.0; // time acceleration factor
+
+  function updateTimerLabel() {
+    timerEl.textContent = "t = " + simTime.toFixed(1) + " s";
+  }
+
+  function rebuildLegend() {
+    legendEl.innerHTML = "";
+    ROUTES.forEach((route) => {
+      const item = document.createElement("div");
+      item.className = "legend-item";
+      const swatch = document.createElement("div");
+      swatch.className = "legend-swatch";
+      swatch.style.backgroundColor = route.color;
+      const label = document.createElement("span");
+      label.textContent = route.vehicle_id;
+      item.appendChild(swatch);
+      item.appendChild(label);
+      legendEl.appendChild(item);
+    });
+  }
+
+  function initAlgorithm(index) {
+    currentAlgoIndex = index;
+    const algo = DATA.algorithms[index];
+
+    // 1) routes for selected algorithm
+    ROUTES = algo.routes.map((route, idx) => {
+      const pts = route.nodes;
+      const segments = [];
+      let totalLen = 0;
+      let totalTime = 0;
+
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i];
+        const b = pts[i + 1];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const len = Math.hypot(dx, dy);
+
+        const key = a.id + "->" + b.id;
+        const baseTime = EDGE_TIME.get(key) ?? (len / 50.0);
+
+        if (len > 0) {
+          segments.push({ a, b, len, baseTime });
+          totalLen += len;
+          totalTime += baseTime;
+        }
+      }
+
+      return {
+        vehicle_id: route.vehicle_id,
+        color: colors[idx % colors.length],
+        segments,
+        totalLen,
+        totalTime,
+        time: 0,
+        finished: false
+      };
+    });
+
+    // 2) delivery metadata for animation
+    DELIVERY_NODES = new Set(algo.delivery_nodes || []);
+    deliveries = (algo.deliveries || []).map(
+      d => Object.assign({ served: false }, d)
+    );
+    visitedDeliveryNodes = new Set();
+    deliveryColorByNode = new Map();
+
+    // color delivery nodes by the vehicle serving them
+    for (const d of deliveries) {
+      const route = ROUTES.find(r => r.vehicle_id === d.vehicle_id);
+      if (route && !deliveryColorByNode.has(d.node_id)) {
+        deliveryColorByNode.set(d.node_id, route.color);
+      }
+    }
+
+    // reset simulation time
+    simTime = 0.0;
+    lastAnimTime = null;
+    updateTimerLabel();
+
+    rebuildLegend();
+    draw();
+    requestAnimationFrame(animate);
+  }
+
+  function draw() {
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+
+    // background
+    ctx.fillStyle = "#020617";
+    ctx.fillRect(-2000, -2000, 4000, 4000);
+
+    // grey roads
+    ctx.strokeStyle = "#1f2937";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (const edge of DATA.edges) {
+      const src = DATA.nodes.find(n => n.id === edge.src);
+      const dst = DATA.nodes.find(n => n.id === edge.dst);
+      ctx.moveTo(src.x, src.y);
+      ctx.lineTo(dst.x, dst.y);
+    }
+    ctx.stroke();
+
+    // colored trail based on TIME traveled
+    for (const route of ROUTES) {
+      if (route.segments.length === 0 || route.time <= 0) continue;
+
+      let remainingTime = route.time;
+
+      ctx.strokeStyle = route.color;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      let started = false;
+
+      for (const seg of route.segments) {
+        if (remainingTime <= 0) break;
+
+        const used = Math.min(seg.baseTime, remainingTime);
+        const t = seg.baseTime === 0 ? 0 : (used / seg.baseTime);
+
+        const sx = seg.a.x;
+        const sy = seg.a.y;
+        const ex = seg.a.x + (seg.b.x - seg.a.x) * t;
+        const ey = seg.a.y + (seg.b.y - seg.a.y) * t;
+
+        if (!started) {
+          ctx.moveTo(sx, sy);
+          started = true;
+        } else {
+          ctx.lineTo(sx, sy);
+        }
+        ctx.lineTo(ex, ey);
+
+        remainingTime -= used;
+      }
+
+      ctx.stroke();
+    }
+
+    // nodes
+    for (const node of DATA.nodes) {
+      const nodeId = node.id;
+      const isDepot = (nodeId === DATA.depot);
+      const isDelivery = DELIVERY_NODES.has(nodeId);
+      const isVisited = visitedDeliveryNodes.has(nodeId);
+
+      let fillColor = "#e5e7eb";
+      let radius = 3;
+
+      if (isDepot) {
+        fillColor = "#22c55e";
+        radius = 6;
+      } else if (isDelivery) {
+        const vehicleColor = deliveryColorByNode.get(nodeId) || "#ef4444";
+        if (!isVisited) {
+          fillColor = vehicleColor;
+          radius = 6;
+        } else {
+          fillColor = vehicleColor;
+          radius = 8;
+        }
+      }
+
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+
+      if (isDelivery) {
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#111827";
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "#9ca3af";
+      ctx.font = "10px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(node.id, node.x, node.y - (radius + 4));
+    }
+
+    // vehicles
+    for (const route of ROUTES) {
+      if (route.segments.length === 0 || route.totalTime === 0) continue;
+
+      let tRemain = route.time;
+      if (tRemain <= 0) continue;
+
+      for (const seg of route.segments) {
+        if (tRemain <= seg.baseTime) {
+          const f = seg.baseTime === 0 ? 0 : (tRemain / seg.baseTime);
+          const x = seg.a.x + (seg.b.x - seg.a.x) * f;
+          const y = seg.a.y + (seg.b.y - seg.a.y) * f;
+
+          ctx.beginPath();
+          ctx.fillStyle = route.color;
+          ctx.arc(x, y, 6, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        tRemain -= seg.baseTime;
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // panning
+  canvas.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    dragStartX = e.clientX - offsetX;
+    dragStartY = e.clientY - offsetY;
+  });
+  window.addEventListener("mouseup", () => {
+    isDragging = false;
+  });
+  canvas.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    offsetX = e.clientX - dragStartX;
+    offsetY = e.clientY - dragStartY;
+    draw();
+  });
+
+  // zoom with scroll
+  canvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const zoomFactor = 1.05;
+    const mouseX = (e.offsetX - offsetX) / scale;
+    const mouseY = (e.offsetY - offsetY) / scale;
+
+    if (e.deltaY < 0) {
+      scale *= zoomFactor;
+    } else {
+      scale /= zoomFactor;
+    }
+
+    offsetX = e.offsetX - mouseX * scale;
+    offsetY = e.offsetY - mouseY * scale;
+    draw();
+  }, { passive: false });
+
+  // fill algorithm selector
+  DATA.algorithms.forEach((algo, idx) => {
+    const opt = document.createElement("option");
+    opt.value = String(idx);
+    opt.textContent = algo.label;
+    algoSelect.appendChild(opt);
+  });
+
+  algoSelect.addEventListener("change", (e) => {
+    const idx = parseInt(e.target.value, 10) || 0;
+    initAlgorithm(idx);
+  });
+
+  function animate(timestamp) {
+    if (lastAnimTime === null) {
+      lastAnimTime = timestamp;
+    }
+    const dt = (timestamp - lastAnimTime) / 1000.0;
+    lastAnimTime = timestamp;
+
+    let allFinished = true;
+
+    for (const route of ROUTES) {
+      if (route.finished || route.totalTime === 0) continue;
+
+      route.time += SPEED * dt;
+      if (route.time >= route.totalTime) {
+        route.time = route.totalTime;
+        route.finished = true;
+      } else {
+        allFinished = false;
+      }
+    }
+
+    // update delivery statuses based on TIME
+    for (const d of deliveries) {
+      if (d.served) continue;
+      const route = ROUTES.find(r => r.vehicle_id === d.vehicle_id);
+      if (!route) continue;
+      if (route.time >= d.arrival_time) {
+        d.served = true;
+        visitedDeliveryNodes.add(d.node_id);
+      }
+    }
+
+    simTime += dt;
+    updateTimerLabel();
+
+    draw();
+
+    if (!allFinished) {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  // start with first algorithm
+  if (DATA.algorithms.length > 0) {
+    algoSelect.value = "0";
+    initAlgorithm(0);
+  }
+</script>
+</body>
+</html>

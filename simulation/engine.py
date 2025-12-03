@@ -55,7 +55,7 @@ class TrafficSimulator:
                     src = path[i]
                     dst = path[i + 1]
                     edge = next(e for e in graph.neighbors(src) if e.dst == dst)
-                    t += self._edge_time(edge, t)
+                    t += self._edge_time(edge)
                 cur = req.node
 
             if return_to_depot and math.isfinite(t) and route.stops:
@@ -67,7 +67,7 @@ class TrafficSimulator:
                         src = path[i]
                         dst = path[i + 1]
                         edge = next(e for e in graph.neighbors(src) if e.dst == dst)
-                        t += self._edge_time(edge, t)
+                        t += self._edge_time(edge)
 
             vehicle_times[vid] = t
 

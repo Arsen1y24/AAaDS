@@ -16,11 +16,6 @@ class SimulationResult:
 
 
 class TrafficSimulator:
-    """
-    Simulate running a completed plan with some noise on the edges
-    (to imitate traffic jams or traffic lights).
-    Simple model for now: Gaussian noise of 10% of the travel time on each edge.
-    """
 
     def __init__(self, rng: random.Random | None = None) -> None:
         self.rng = rng or random.Random()
